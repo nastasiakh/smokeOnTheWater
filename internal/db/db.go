@@ -7,7 +7,7 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"os"
-	"smokeOnTheWater/models"
+	"smokeOnTheWater/internal/models"
 )
 
 var DB *gorm.DB
