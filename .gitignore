@@ -26,3 +26,7 @@ Thumbs.db
 
 # GoLand
 .go/
+
+build
+/go.mod
+/go.sum
