@@ -1,0 +1,33 @@
+### GET request for getting all users
+GET http://localhost:8080/users
+Accept: application/json
+
+### GET request for getting user by id
+GET http://localhost:8080/users/1
+Accept: application/json
+
+
+### POST request for creating new user
+POST http://localhost:8080/users
+Accept: application/json
+{
+  "email": "email@test.com",
+  "password": "1234demo",
+  "firstName": "Test",
+  "lastName": "Testovich"
+}
+
+### PUT request for updating user by id
+PUT http://localhost:8080/users/1
+Accept: application/json
+{
+  "email": "email@test.com",
+  "password": "1234demo",
+  "firstName": "Test",
+  "lastName": "Testovich"
+}
+
+### DELETE request for removing user
+DELETE http://localhost:8080/users/1
+Accept: application/json
+

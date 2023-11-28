@@ -2,6 +2,7 @@ package services
 
 import (
 	"smokeOnTheWater/internal/handlers/repositories"
+	"smokeOnTheWater/internal/handlers/validation"
 	"smokeOnTheWater/internal/models"
 )
 
@@ -30,6 +31,9 @@ func (service *UserService) GetById(id uint) (models.User, error) {
 }
 
 func (service *UserService) Create(user *models.User) error {
+	if err := validation.ValidateStruct(user); err != nil {
+		return err
+	}
 	if err := service.userRepository.Create(user); err != nil {
 		return err
 	}

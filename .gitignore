@@ -27,6 +27,7 @@ Thumbs.db
 # GoLand
 .go/
 
-build
-/go.mod
-/go.sum
+build/
+go.mod/
+go.sum
+smokeOnTheWater

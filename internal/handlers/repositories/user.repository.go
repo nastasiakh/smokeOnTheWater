@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"github.com/jinzhu/gorm"
+	"smokeOnTheWater/internal/handlers/validation"
 	"smokeOnTheWater/internal/models"
 )
 
@@ -18,22 +19,33 @@ func (repo *UserRepository) FindAll() ([]models.User, error) {
 	return users, repo.db.Find(&users).Error
 }
 
-func (repo *UserRepository) FindById(userId uint) (models.User, error) {
+func (repo *UserRepository) FindById(id uint) (models.User, error) {
 	var user models.User
-	if err := repo.db.First(&user, userId).Error; err != nil {
+	if err := repo.db.First(&user, id).Error; err != nil {
 		return models.User{}, err
 	}
 	return user, nil
 }
 
+func (repo *UserRepository) FindByEmail(email string) (*models.User, error) {
+	var user models.User
+	if err := repo.db.Where("email = ?", email).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (repo *UserRepository) Create(user *models.User) error {
+	if err := validation.ValidateStruct(user); err != nil {
+		return err
+	}
 	return repo.db.Create(user).Error
 }
 
-func (repo *UserRepository) Update(userId uint, userBody models.User) (models.User, error) {
+func (repo *UserRepository) Update(id uint, userBody models.User) (models.User, error) {
 	var existingUser models.User
 
-	if err := repo.db.First(&existingUser, userId).Error; err != nil {
+	if err := repo.db.First(&existingUser, id).Error; err != nil {
 		return models.User{}, err
 	}
 
@@ -44,10 +56,10 @@ func (repo *UserRepository) Update(userId uint, userBody models.User) (models.Us
 	return existingUser, nil
 }
 
-func (repo *UserRepository) DeleteById(userId uint) error {
+func (repo *UserRepository) DeleteById(id uint) error {
 	var existingUser models.User
 
-	if err := repo.db.First(&existingUser, userId).Error; err != nil {
+	if err := repo.db.First(&existingUser, id).Error; err != nil {
 		return err
 	}
 
