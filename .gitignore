@@ -1,0 +1,28 @@
+# Executables
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Go
+bin/
+pkg/
+
+# Logs
+*.log
+
+# Cache
+.cache/
+
+# Local configuration
+.env
+
+# System
+.DS_Store
+Thumbs.db
+
+# IntelliJ IDEA
+.idea/
+
+# GoLand
+.go/
