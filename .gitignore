@@ -28,6 +28,6 @@ Thumbs.db
 .go/
 
 build/
-go.mod/
+go.mod
 go.sum
 smokeOnTheWater
