@@ -58,7 +58,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 }
 
 func (c *AuthController) SignUp(ctx *gin.Context) {
-	var newUser *models.User
+	var newUser models.User
 	if err := ctx.ShouldBindJSON(&newUser); err != nil {
 		ctx.JSON(400, gin.H{"error": "Invalid register data"})
 		return

@@ -30,7 +30,7 @@ func (service *UserService) GetById(id uint) (models.User, error) {
 	return user, nil
 }
 
-func (service *UserService) Create(user *models.User) error {
+func (service *UserService) Create(user models.User) error {
 	if err := validation.ValidateStruct(user); err != nil {
 		return err
 	}
@@ -41,6 +41,9 @@ func (service *UserService) Create(user *models.User) error {
 }
 
 func (service *UserService) Update(id uint, body models.User) (models.User, error) {
+	if err := validation.ValidateStruct(body); err != nil {
+		return models.User{}, err
+	}
 	user, err := service.userRepository.Update(id, body)
 	if err != nil {
 		return models.User{}, err

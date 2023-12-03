@@ -35,7 +35,7 @@ func (repo *UserRepository) FindByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func (repo *UserRepository) Create(user *models.User) error {
+func (repo *UserRepository) Create(user models.User) error {
 	if err := validation.ValidateStruct(user); err != nil {
 		return err
 	}
@@ -44,6 +44,9 @@ func (repo *UserRepository) Create(user *models.User) error {
 
 func (repo *UserRepository) Update(id uint, userBody models.User) (models.User, error) {
 	var existingUser models.User
+	if err := validation.ValidateStruct(userBody); err != nil {
+		return models.User{}, err
+	}
 
 	if err := repo.db.First(&existingUser, id).Error; err != nil {
 		return models.User{}, err

@@ -16,7 +16,7 @@ func NewUserController(userService *services.UserService) *UserController {
 }
 
 func (c *UserController) CreateUser(ctx *gin.Context) {
-	user := new(models.User)
+	var user models.User
 
 	if err := ctx.ShouldBindJSON(&user); err != nil {
 		ctx.JSON(400, gin.H{"error": "Invalid user data"})

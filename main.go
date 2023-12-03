@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"smokeOnTheWater/internal/db"
+	"smokeOnTheWater/internal/db/migrations"
 	"smokeOnTheWater/internal/handlers/controllers"
 	"smokeOnTheWater/internal/handlers/repositories"
 	"smokeOnTheWater/internal/handlers/services"
@@ -19,13 +20,18 @@ func main() {
 	})
 
 	db.Init()
-	if err := db.MigrateDB(db.DB); err != nil {
+	if err := migrations.MigrateDB(db.DB); err != nil {
 		panic("Failed to migrate database")
 	}
 
 	userRepository := repositories.NewUserRepository(db.DB)
 	userService := services.NewUserService(userRepository)
 	userController := controllers.NewUserController(userService)
+
+	roleRepository := repositories.NewRoleRepository(db.DB)
+	roleService := services.NewRoleService(roleRepository)
+	roleController := controllers.NewRoleController(roleService)
+
 	authController := controllers.NewAuthController(services.NewAuthService(userRepository))
 
 	authGroup := router.Group("/auth")
@@ -40,6 +46,14 @@ func main() {
 		userGroup.POST("/", userController.CreateUser)
 		userGroup.PUT("/:id", userController.UpdateUser)
 		userGroup.DELETE("/:id", userController.DeleteUser)
+	}
+	roleGroup := router.Group("/roles")
+	{
+		roleGroup.GET("/", roleController.GetAllRoles)
+		roleGroup.GET("/:id", roleController.GetRole)
+		roleGroup.POST("/", roleController.CreateRole)
+		roleGroup.PUT("/:id", roleController.UpdateRole)
+		roleGroup.DELETE("/:id", roleController.DeleteRole)
 	}
 	router.Run(":8080")
 }
