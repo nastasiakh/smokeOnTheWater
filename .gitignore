@@ -3,6 +3,7 @@
 *.dll
 *.so
 *.dylib
+*.iml
 
 # Go
 bin/
@@ -22,12 +23,11 @@ pkg/
 Thumbs.db
 
 # IntelliJ IDEA
-.idea/
+.idea
 
 # GoLand
-.go/
+.go
 
-build/
-go.mod
-go.sum
+build
+
 smokeOnTheWater
