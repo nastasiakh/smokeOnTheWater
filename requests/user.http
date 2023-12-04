@@ -3,7 +3,7 @@ GET http://localhost:8080/users
 Accept: application/json
 
 ### GET request for getting user by id
-GET http://localhost:8080/users/1
+GET http://localhost:8080/users/3
 Accept: application/json
 
 
@@ -12,14 +12,14 @@ POST http://localhost:8080/users
 Accept: application/json
 
 {
-  "email": "email@test.com",
+  "email": "admin@test.com",
   "password": "1234demo",
-  "firstName": "Test",
-  "lastName": "Testovich"
+  "firstName": "admin",
+  "lastName": "adminenko"
 }
 
 ### PUT request for updating user by id
-PUT http://localhost:8080/users/1
+PUT http://localhost:8080/users/3
 Accept: application/json
 
 {

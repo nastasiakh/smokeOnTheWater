@@ -16,7 +16,7 @@ Content-Type: application/json
 
 
 ### PUT request for updating role by id
-PUT http://localhost:8080/roles/2
+PUT http://localhost:8080/roles/3
 Accept: application/json
 
 {

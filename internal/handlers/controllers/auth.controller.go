@@ -77,7 +77,7 @@ func (c *AuthController) SignUp(ctx *gin.Context) {
 	}
 	newUser.Password = string(hashedPassword)
 
-	createdUser := c.userService.Create(newUser)
+	createdUser := c.userService.Create(&newUser)
 	if createdUser == nil {
 		ctx.JSON(500, gin.H{"error": "Failed to register user"})
 		return
