@@ -39,6 +39,15 @@ func (repo *UserRepository) Create(user *models.User) error {
 	if err := validation.ValidateStruct(*user); err != nil {
 		return err
 	}
+
+	if len(user.Roles) == 0 {
+		role := models.Role{}
+		if err := repo.db.Where(models.Role{Name: "client"}).FirstOrCreate(&role).Error; err != nil {
+			return err
+		}
+		user.Roles = append(user.Roles, role)
+	}
+
 	return repo.db.Create(user).Error
 }
 

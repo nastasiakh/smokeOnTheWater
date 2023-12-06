@@ -6,4 +6,5 @@ type User struct {
 	LastName  string `json:"lastName" gorm:"column:last_name;not null" validate:"required"`
 	Email     string `json:"email" gorm:"column:email;unique;not null" validate:"required,email"`
 	Password  string `json:"password" gorm:"column:password;not null" validate:"required"`
+	Roles     []Role `gorm:"many2many:user_role;" json:"roles"`
 }

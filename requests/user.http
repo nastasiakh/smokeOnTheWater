@@ -12,10 +12,10 @@ POST http://localhost:8080/users
 Accept: application/json
 
 {
-  "email": "admin@test.com",
+  "email": "client@test.com",
   "password": "1234demo",
-  "firstName": "admin",
-  "lastName": "adminenko"
+  "firstName": "client",
+  "lastName": "customerovich"
 }
 
 ### PUT request for updating user by id
