@@ -17,6 +17,9 @@ func MigrateDB(db *gorm.DB) error {
 				if err := tables.MigrateRolesTable(tx); err != nil {
 					return err
 				}
+				if err := tables.MigratePermissionTable(tx); err != nil {
+					return err
+				}
 				return nil
 			},
 			Rollback: func(tx *gorm.DB) error {
@@ -24,6 +27,9 @@ func MigrateDB(db *gorm.DB) error {
 					return err
 				}
 				if err := tables.RollbackRolesTable(tx); err != nil {
+					return err
+				}
+				if err := tables.RollbackPermissionTable(tx); err != nil {
 					return err
 				}
 				return nil

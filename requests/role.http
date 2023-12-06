@@ -1,4 +1,4 @@
-### GET request for getting all users
+### GET request for getting all roles
 GET http://localhost:8080/roles
 Accept: application/json
 
@@ -11,16 +11,22 @@ POST http://localhost:8080/roles
 Content-Type: application/json
 
 {
-  "name": "manager"
+  "name": "manager",
+  "permissions": [{
+    "title": "user.create"
+  }]
 }
 
 
 ### PUT request for updating role by id
-PUT http://localhost:8080/roles/3
+PUT http://localhost:8080/roles/1
 Accept: application/json
 
 {
-   "name": "manager1"
+   "name": "admin",
+   "permissions": [{
+			"title": "user.create"
+		}]
 }
 
 ### DELETE request for removing role
