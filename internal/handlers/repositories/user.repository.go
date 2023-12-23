@@ -35,20 +35,19 @@ func (repo *UserRepository) FindByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func (repo *UserRepository) Create(user *models.User) error {
+func (repo *UserRepository) Create(user *models.User) (*models.User, error) {
+	// Validate user data
 	if err := validation.ValidateStruct(*user); err != nil {
-		return err
+		return nil, err
 	}
 
-	if len(user.Roles) == 0 {
-		role := models.Role{}
-		if err := repo.db.Where(models.Role{Name: "client"}).FirstOrCreate(&role).Error; err != nil {
-			return err
-		}
-		user.Roles = append(user.Roles, role)
+	// Create the user in the database
+	if err := repo.db.Create(user).Error; err != nil {
+		return nil, err
 	}
 
-	return repo.db.Create(user).Error
+	// Return the created user
+	return user, nil
 }
 
 func (repo *UserRepository) Update(id uint, userBody *models.User) (models.User, error) {

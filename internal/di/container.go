@@ -23,7 +23,7 @@ func BuildContainer() *Container {
 	roleController := controllers.NewRoleController(roleService)
 
 	authService := services.NewAuthService(userRepository)
-	authController := controllers.NewAuthController(authService)
+	authController := controllers.NewAuthController(authService, userService)
 
 	return &Container{
 		UserController: userController,

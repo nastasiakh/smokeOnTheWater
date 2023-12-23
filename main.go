@@ -6,6 +6,7 @@ import (
 	"smokeOnTheWater/internal/db"
 	"smokeOnTheWater/internal/db/migrations"
 	"smokeOnTheWater/internal/di"
+	"smokeOnTheWater/internal/handlers/middlewars"
 	"smokeOnTheWater/internal/handlers/validation"
 	"smokeOnTheWater/internal/routes"
 )
@@ -13,6 +14,7 @@ import (
 func main() {
 	validation.InitValidator()
 	router := gin.Default()
+	router.Use(middlewars.CorsMiddleware())
 
 	router.GET("/ping", func(c *gin.Context) {
 		c.String(200, "pong")

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"golang.org/x/crypto/bcrypt"
 	"smokeOnTheWater/internal/handlers/repositories"
 	"smokeOnTheWater/internal/handlers/validation"
 	"smokeOnTheWater/internal/models"
@@ -30,14 +31,30 @@ func (service *UserService) GetById(id uint) (models.User, error) {
 	return user, nil
 }
 
-func (service *UserService) Create(user *models.User) error {
+func (service *UserService) GetByEmail(email string) (*models.User, error) {
+	user, err := service.userRepository.FindByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+func (service *UserService) Create(user *models.User) (*models.User, error) {
 	if err := validation.ValidateStruct(*user); err != nil {
-		return err
+		return nil, err
 	}
-	if err := service.userRepository.Create(user); err != nil {
-		return err
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
 	}
-	return nil
+	user.Password = string(hashedPassword)
+
+	createdUser, err := service.userRepository.Create(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return createdUser, nil
 }
 
 func (service *UserService) Update(id uint, body *models.User) (models.User, error) {

@@ -3,7 +3,6 @@ package controllers
 import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 	"smokeOnTheWater/internal/handlers/services"
 	"smokeOnTheWater/internal/models"
 )
@@ -27,14 +26,14 @@ type AuthController struct {
 	userService *services.UserService
 }
 
-func NewAuthController(authService *services.AuthService) *AuthController {
-	return &AuthController{authService: authService}
+func NewAuthController(authService *services.AuthService, userService *services.UserService) *AuthController {
+	return &AuthController{authService: authService, userService: userService}
 }
 
 func (c *AuthController) Login(ctx *gin.Context) {
 	var loginData struct {
-		Email    string `json:"email" binding:"required, email"`
-		Password string `json:"password" binding:"password"`
+		Email    string `json:"email" binding:"required,email"`
+		Password string `json:"password" binding:"required"`
 	}
 
 	if err := ctx.ShouldBindJSON(&loginData); err != nil {
@@ -64,25 +63,23 @@ func (c *AuthController) SignUp(ctx *gin.Context) {
 		return
 	}
 
-	existingUser, err := c.authService.Authenticate(newUser.Email, newUser.Password)
+	existingUser, err := c.userService.GetByEmail(newUser.Email)
 	if existingUser != nil {
 		ctx.JSON(400, gin.H{"error": "User with such email already exists"})
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
+	createdUser, err := c.userService.Create(&newUser)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to hash password"})
-		return
-	}
-	newUser.Password = string(hashedPassword)
-
-	createdUser := c.userService.Create(&newUser)
-	if createdUser == nil {
 		ctx.JSON(500, gin.H{"error": "Failed to register user"})
 		return
 	}
 
-	ctx.JSON(200, gin.H{"error": "Registration successful", "user": createdUser})
+	token, err := generateToken(createdUser)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to generate token"})
+		return
+	}
 
+	ctx.JSON(200, gin.H{"token": token, "message": "Registration successful"})
 }

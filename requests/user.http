@@ -15,7 +15,8 @@ Accept: application/json
   "email": "client@test.com",
   "password": "1234demo",
   "firstName": "client",
-  "lastName": "customerovich"
+  "lastName": "customerovich",
+  "phone": "790665690708"
 }
 
 ### PUT request for updating user by id

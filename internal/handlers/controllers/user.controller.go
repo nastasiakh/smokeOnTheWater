@@ -22,7 +22,8 @@ func (c *UserController) CreateUser(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"error": "Invalid user data"})
 		return
 	}
-	if err := c.userService.Create(&user); err != nil {
+	_, err := c.userService.Create(&user)
+	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to create user"})
 		return
 	}
