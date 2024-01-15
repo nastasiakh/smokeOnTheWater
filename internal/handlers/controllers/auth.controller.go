@@ -46,14 +46,14 @@ func (c *AuthController) Login(ctx *gin.Context) {
 		ctx.JSON(401, gin.H{"error": "Invalid credentials"})
 		return
 	}
-
+	ctx.Set("userRole", existingUser.Roles)
 	token, err := generateToken(existingUser)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to generate token"})
 		return
 	}
 
-	ctx.JSON(200, gin.H{"token": token, "message": "Login successful"})
+	ctx.JSON(200, gin.H{"token": token, "user": existingUser, "message": "Login successful"})
 }
 
 func (c *AuthController) SignUp(ctx *gin.Context) {
