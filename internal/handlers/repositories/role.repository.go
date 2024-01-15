@@ -21,7 +21,15 @@ func (repo *RoleRepository) FindAll() ([]models.Role, error) {
 
 func (repo *RoleRepository) FindById(id uint) (models.Role, error) {
 	var role models.Role
-	return role, repo.db.First(&role).Error
+	return role, repo.db.First(&role, id).Error
+}
+
+func (repo *RoleRepository) FindByName(name string) (models.Role, error) {
+	var role models.Role
+	if err := repo.db.Where("name = ?", name).First(&role).Error; err != nil {
+		return models.Role{}, err
+	}
+	return role, nil
 }
 
 func (repo *RoleRepository) Create(role models.Role) error {
@@ -33,11 +41,13 @@ func (repo *RoleRepository) Create(role models.Role) error {
 
 func (repo *RoleRepository) Update(id uint, roleBody models.Role) (models.Role, error) {
 	var existingRole models.Role
+
 	if err := validation.ValidateStruct(roleBody); err != nil {
 		return models.Role{}, err
 	}
 
-	if err := repo.db.First(&existingRole, id).Error; err != nil {
+	existingRole, err := repo.FindById(id)
+	if err != nil {
 		return models.Role{}, err
 	}
 

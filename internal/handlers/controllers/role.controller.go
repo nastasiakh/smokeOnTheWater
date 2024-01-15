@@ -71,7 +71,7 @@ func (c *RoleController) UpdateRole(ctx *gin.Context) {
 		ctx.JSON(500, gin.H{"error": "Failed to update role"})
 		return
 	}
-	ctx.JSON(300, role)
+	ctx.JSON(200, role)
 }
 
 func (c *RoleController) DeleteRole(ctx *gin.Context) {

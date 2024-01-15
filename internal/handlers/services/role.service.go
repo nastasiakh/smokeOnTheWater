@@ -44,6 +44,7 @@ func (service *RoleService) Update(id uint, body models.Role) (models.Role, erro
 	if err := validation.ValidateStruct(body); err != nil {
 		return models.Role{}, err
 	}
+
 	role, err := service.roleRepository.Update(id, body)
 	if err != nil {
 		return models.Role{}, err
