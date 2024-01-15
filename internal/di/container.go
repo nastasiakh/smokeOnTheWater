@@ -15,15 +15,15 @@ type Container struct {
 
 func BuildContainer() *Container {
 	userRepository := repositories.NewUserRepository(db.DB)
-	userService := services.NewUserService(userRepository)
-	userController := controllers.NewUserController(userService)
-
 	roleRepository := repositories.NewRoleRepository(db.DB)
-	roleService := services.NewRoleService(roleRepository)
-	roleController := controllers.NewRoleController(roleService)
 
+	userService := services.NewUserService(userRepository, roleRepository)
 	authService := services.NewAuthService(userRepository)
+	roleService := services.NewRoleService(roleRepository)
+
+	userController := controllers.NewUserController(userService)
 	authController := controllers.NewAuthController(authService, userService)
+	roleController := controllers.NewRoleController(roleService)
 
 	return &Container{
 		UserController: userController,
