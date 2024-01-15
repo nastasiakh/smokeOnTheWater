@@ -16,12 +16,12 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 
 func (repo *UserRepository) FindAll() ([]models.User, error) {
 	var users []models.User
-	return users, repo.db.Find(&users).Error
+	return users, repo.db.Preload("Roles").Find(&users).Error
 }
 
 func (repo *UserRepository) FindById(id uint) (models.User, error) {
 	var user models.User
-	if err := repo.db.First(&user, id).Error; err != nil {
+	if err := repo.db.Preload("Roles").First(&user, id).Error; err != nil {
 		return models.User{}, err
 	}
 	return user, nil
@@ -36,47 +36,74 @@ func (repo *UserRepository) FindByEmail(email string) (*models.User, error) {
 }
 
 func (repo *UserRepository) Create(user *models.User) (*models.User, error) {
-	// Validate user data
 	if err := validation.ValidateStruct(*user); err != nil {
 		return nil, err
 	}
 
-	// Create the user in the database
+	tx := repo.db.Begin()
+
 	if err := repo.db.Create(user).Error; err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
-	// Return the created user
+	for _, role := range user.Roles {
+		if err := tx.Model(&user).Association("Roles").Append(role).Error; err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	tx.Commit()
 	return user, nil
 }
 
 func (repo *UserRepository) Update(id uint, userBody *models.User) (models.User, error) {
-	var existingUser models.User
+	tx := repo.db.Begin()
+
 	if err := validation.ValidateStruct(*userBody); err != nil {
 		return models.User{}, err
 	}
 
-	if err := repo.db.First(&existingUser, id).Error; err != nil {
+	existingUser, err := repo.FindById(id)
+	if err != nil {
+		tx.Rollback()
 		return models.User{}, err
 	}
 
-	if err := repo.db.Model(&existingUser).Update(userBody).Error; err != nil {
+	if err := tx.Model(&existingUser).Updates(models.User{
+		FirstName: userBody.FirstName,
+		LastName:  userBody.LastName,
+		Phone:     userBody.Phone,
+		Email:     userBody.Email,
+	}).Error; err != nil {
+		tx.Rollback()
 		return models.User{}, err
 	}
 
+	if err := tx.Model(&existingUser).Association("Roles").Replace(userBody.Roles).Error; err != nil {
+		tx.Rollback()
+		return models.User{}, err
+	}
+
+	tx.Commit()
 	return existingUser, nil
 }
 
 func (repo *UserRepository) DeleteById(id uint) error {
+	tx := repo.db.Begin()
+
 	var existingUser models.User
-
-	if err := repo.db.First(&existingUser, id).Error; err != nil {
+	if err := tx.First(&existingUser, id).Error; err != nil {
+		tx.Rollback()
 		return err
 	}
 
-	if err := repo.db.Delete(&existingUser).Error; err != nil {
+	if err := tx.Delete(&existingUser).Error; err != nil {
+		tx.Rollback()
 		return err
 	}
 
+	tx.Commit()
 	return nil
 }

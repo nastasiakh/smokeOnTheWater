@@ -9,10 +9,11 @@ import (
 
 type UserService struct {
 	userRepository *repositories.UserRepository
+	roleRepository *repositories.RoleRepository
 }
 
-func NewUserService(userRepository *repositories.UserRepository) *UserService {
-	return &UserService{userRepository: userRepository}
+func NewUserService(userRepository *repositories.UserRepository, roleRepository *repositories.RoleRepository) *UserService {
+	return &UserService{userRepository: userRepository, roleRepository: roleRepository}
 }
 
 func (service *UserService) GetAll() ([]models.User, error) {
@@ -28,6 +29,7 @@ func (service *UserService) GetById(id uint) (models.User, error) {
 	if err != nil {
 		return models.User{}, err
 	}
+
 	return user, nil
 }
 
@@ -39,15 +41,26 @@ func (service *UserService) GetByEmail(email string) (*models.User, error) {
 	return user, nil
 }
 func (service *UserService) Create(user *models.User) (*models.User, error) {
+
 	if err := validation.ValidateStruct(*user); err != nil {
 		return nil, err
 	}
 
+	// todo create helper for hasher
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
 	}
 	user.Password = string(hashedPassword)
+
+	// todo check isEmpty method or similar
+	if len(user.Roles) == 0 {
+		clientRole, err := service.roleRepository.FindByName("client")
+		if err != nil {
+			return nil, nil
+		}
+		user.Roles = append(user.Roles, clientRole)
+	}
 
 	createdUser, err := service.userRepository.Create(user)
 	if err != nil {
