@@ -7,11 +7,12 @@ import (
 )
 
 type RoleService struct {
-	roleRepository *repositories.RoleRepository
+	roleRepository       *repositories.RoleRepository
+	permissionRepository *repositories.PermissionRepository
 }
 
-func NewRoleService(roleRepository *repositories.RoleRepository) *RoleService {
-	return &RoleService{roleRepository: roleRepository}
+func NewRoleService(roleRepository *repositories.RoleRepository, permissionRepository *repositories.PermissionRepository) *RoleService {
+	return &RoleService{roleRepository: roleRepository, permissionRepository: permissionRepository}
 }
 
 func (service *RoleService) GetAll() ([]models.Role, error) {

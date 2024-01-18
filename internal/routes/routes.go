@@ -33,4 +33,10 @@ func AddRoutes(router *gin.Engine, container *di.Container) {
 		roleGroup.DELETE("/:id", roleController.DeleteRole)
 	}
 
+	permissionController := container.PermissionController
+	permissionGroup := router.Group("/permissions")
+	{
+		permissionGroup.GET("/", permissionController.GetAllPermissions)
+	}
+
 }
