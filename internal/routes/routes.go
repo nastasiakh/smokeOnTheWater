@@ -39,4 +39,14 @@ func AddRoutes(router *gin.Engine, container *di.Container) {
 		permissionGroup.GET("/", permissionController.GetAllPermissions)
 	}
 
+	categoryController := container.CategoryController
+	categoryGroup := router.Group("/categories")
+	{
+		categoryGroup.GET("/", categoryController.GetAllCategories)
+		categoryGroup.GET("/:id", categoryController.GetCategoryById)
+		categoryGroup.POST("/", categoryController.CreateCategory)
+		categoryGroup.PUT("/:id", categoryController.UpdateCategory)
+		categoryGroup.DELETE("/:id", categoryController.DeleteCategory)
+	}
+
 }

@@ -12,27 +12,32 @@ type Container struct {
 	RoleController       *controllers.RoleController
 	AuthController       *controllers.AuthController
 	PermissionController *controllers.PermissionController
+	CategoryController   *controllers.CategoryController
 }
 
 func BuildContainer() *Container {
 	userRepository := repositories.NewUserRepository(db.DB)
 	roleRepository := repositories.NewRoleRepository(db.DB)
 	permissionRepository := repositories.NewPermissionRepository(db.DB)
+	categoryRepository := repositories.NewCategoryRepository(db.DB)
 
 	userService := services.NewUserService(userRepository, roleRepository)
 	authService := services.NewAuthService(userRepository)
 	roleService := services.NewRoleService(roleRepository, permissionRepository)
 	permissionService := services.NewPermissionService(permissionRepository)
+	categoryService := services.NewCategoryService(categoryRepository)
 
 	userController := controllers.NewUserController(userService)
 	authController := controllers.NewAuthController(authService, userService)
 	roleController := controllers.NewRoleController(roleService)
 	permissionController := controllers.NewPermissionController(permissionService)
+	categoryController := controllers.NewCategoryController(categoryService)
 
 	return &Container{
 		UserController:       userController,
 		RoleController:       roleController,
 		AuthController:       authController,
 		PermissionController: permissionController,
+		CategoryController:   categoryController,
 	}
 }
