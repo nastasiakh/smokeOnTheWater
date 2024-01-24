@@ -49,4 +49,14 @@ func AddRoutes(router *gin.Engine, container *di.Container) {
 		categoryGroup.DELETE("/:id", categoryController.DeleteCategory)
 	}
 
+	productController := container.ProductController
+	productGroup := router.Group("/products")
+	{
+		productGroup.GET("/", productController.GetAllProducts)
+		productGroup.GET("/:id", productController.GetProduct)
+		productGroup.POST("/", productController.CreateProduct)
+		productGroup.PUT("/:id", productController.UpdateProduct)
+		productGroup.DELETE("/:id", productController.DeleteProduct)
+	}
+
 }

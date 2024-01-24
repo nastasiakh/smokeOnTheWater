@@ -23,6 +23,10 @@ func MigrateDB(db *gorm.DB) error {
 				if err := tables.MigrateCategoriesTable(tx); err != nil {
 					return err
 				}
+				if err := tables.MigrateProductsTable(tx); err != nil {
+					return err
+				}
+
 				return nil
 			},
 			Rollback: func(tx *gorm.DB) error {
@@ -36,6 +40,9 @@ func MigrateDB(db *gorm.DB) error {
 					return err
 				}
 				if err := tables.RollbackCategoriesTable(tx); err != nil {
+					return err
+				}
+				if err := tables.RollbackProductsTable(tx); err != nil {
 					return err
 				}
 				return nil
