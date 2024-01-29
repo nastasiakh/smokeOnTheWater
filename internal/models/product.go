@@ -8,6 +8,7 @@ type Product struct {
 	MetaDescription string     `json:"metaDescription" gorm:"column:meta_description;not null" validate:"required"`
 	Sku             string     `json:"sku" gorm:"column:sku;unique;not null" validate:"required"`
 	Quantity        uint       `json:"quantity" gorm:"column:quantity;not null" validate:"required"`
+	Price           float64    `json:"price" gorm:"column:price;not null" validate:"required"`
 	Images          string     `json:"images" gorm:"column:images;not null;" validate:"required"`
 	Categories      []Category `gorm:"many2many:product_category;" json:"categories"`
 }
