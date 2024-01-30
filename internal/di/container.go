@@ -14,6 +14,7 @@ type Container struct {
 	PermissionController *controllers.PermissionController
 	CategoryController   *controllers.CategoryController
 	ProductController    *controllers.ProductController
+	OrderController      *controllers.OrderController
 }
 
 func BuildContainer() *Container {
@@ -22,6 +23,8 @@ func BuildContainer() *Container {
 	permissionRepository := repositories.NewPermissionRepository(db.DB)
 	categoryRepository := repositories.NewCategoryRepository(db.DB)
 	productRepository := repositories.NewProductRepository(db.DB)
+	orderRepository := repositories.NewOrderRepository(db.DB)
+	orderProductRepository := repositories.NewOrderProductRepository(db.DB)
 
 	userService := services.NewUserService(userRepository, roleRepository)
 	authService := services.NewAuthService(userRepository)
@@ -29,6 +32,7 @@ func BuildContainer() *Container {
 	permissionService := services.NewPermissionService(permissionRepository)
 	categoryService := services.NewCategoryService(categoryRepository)
 	productService := services.NewProductService(productRepository)
+	orderService := services.NewOrderService(orderRepository, orderProductRepository)
 
 	userController := controllers.NewUserController(userService)
 	authController := controllers.NewAuthController(authService, userService)
@@ -36,6 +40,7 @@ func BuildContainer() *Container {
 	permissionController := controllers.NewPermissionController(permissionService)
 	categoryController := controllers.NewCategoryController(categoryService)
 	productController := controllers.NewProductController(productService)
+	orderController := controllers.NewOrderController(orderService)
 
 	return &Container{
 		UserController:       userController,
@@ -44,5 +49,6 @@ func BuildContainer() *Container {
 		PermissionController: permissionController,
 		CategoryController:   categoryController,
 		ProductController:    productController,
+		OrderController:      orderController,
 	}
 }
