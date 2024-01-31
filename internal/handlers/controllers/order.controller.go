@@ -31,6 +31,7 @@ func (c *OrderController) CreateOrder(ctx *gin.Context) {
 		ctx.JSON(500, gin.H{"error": "Failed to create order"})
 		return
 	}
+
 	ctx.JSON(201, createdOrder)
 }
 
@@ -70,7 +71,7 @@ func (c *OrderController) UpdateOrder(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"error": "Invalid order ID"})
 		return
 	}
-
+	newOrder.Order.DateModified = time.Now()
 	order, err := c.orderService.Update(uint(orderId), newOrder)
 
 	if err != nil {

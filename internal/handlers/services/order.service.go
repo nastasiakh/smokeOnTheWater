@@ -7,12 +7,20 @@ import (
 )
 
 type OrderService struct {
-	orderRepo        *repositories.OrderRepository
-	orderProductRepo *repositories.OrderProductRepository
+	orderRepo                 *repositories.OrderRepository
+	orderProductRepo          *repositories.OrderProductRepository
+	quantityCalculatorService *QuantityCalculatorService
 }
 
-func NewOrderService(orderRepository *repositories.OrderRepository, orderProductRepository *repositories.OrderProductRepository) *OrderService {
-	return &OrderService{orderRepo: orderRepository, orderProductRepo: orderProductRepository}
+func NewOrderService(
+	orderRepository *repositories.OrderRepository,
+	orderProductRepository *repositories.OrderProductRepository,
+	quantityCalculatorService *QuantityCalculatorService) *OrderService {
+	return &OrderService{
+		orderRepo:                 orderRepository,
+		orderProductRepo:          orderProductRepository,
+		quantityCalculatorService: quantityCalculatorService,
+	}
 }
 
 func (service *OrderService) Create(orderBody *models.Order, orderProducts []*models.OrderProduct) (*models.Order, error) {
@@ -27,6 +35,9 @@ func (service *OrderService) Create(orderBody *models.Order, orderProducts []*mo
 	for _, op := range orderProducts {
 		op.OrderID = createdOrder.ID
 		if err := service.orderProductRepo.Create(op); err != nil {
+			return nil, err
+		}
+		if err := service.quantityCalculatorService.CalculateQuantity(op.ProductID, int(op.Quantity)); err != nil {
 			return nil, err
 		}
 	}
@@ -89,15 +100,43 @@ func (service *OrderService) Update(orderID uint, updatedOrder models.OrderWithP
 		return models.OrderWithProducts{}, err
 	}
 
-	for _, product := range updatedOrder.OrderProducts {
-		_, err := service.orderProductRepo.Update(product.OrderID, *product)
-		if err != nil {
-			return models.OrderWithProducts{}, err
+	existingProducts, err := service.orderProductRepo.FindByOrderID(orderID)
+	if err != nil {
+		return models.OrderWithProducts{}, err
+	}
+
+	for _, updatedProduct := range updatedOrder.OrderProducts {
+		var existingProduct *models.OrderProduct
+		for _, existing := range existingProducts {
+
+			if existing.ProductID == updatedProduct.ProductID {
+				existingProduct = existing
+				break
+			}
+		}
+
+		if existingProduct != nil {
+			_, err := service.orderProductRepo.Update(updatedProduct.ID, *updatedProduct)
+			if err != nil {
+				return models.OrderWithProducts{}, err
+			}
+
+			diff := int(updatedProduct.Quantity) - int(existingProduct.Quantity)
+			if diff != 0 {
+				if err := service.quantityCalculatorService.CalculateQuantity(updatedProduct.ProductID, diff); err != nil {
+					return models.OrderWithProducts{}, err
+				}
+			}
+		} else {
+			if err := service.orderProductRepo.Create(updatedProduct); err != nil {
+				return models.OrderWithProducts{}, err
+			}
 		}
 	}
 
 	return updatedOrder, nil
 }
+
 func (service *OrderService) Delete(orderId uint) error {
 	if err := service.orderRepo.DeleteById(orderId); err != nil {
 		return err

@@ -32,7 +32,8 @@ func BuildContainer() *Container {
 	permissionService := services.NewPermissionService(permissionRepository)
 	categoryService := services.NewCategoryService(categoryRepository)
 	productService := services.NewProductService(productRepository)
-	orderService := services.NewOrderService(orderRepository, orderProductRepository)
+	productQuantityCalculatorService := services.NewQuantityCalculatorService(productRepository)
+	orderService := services.NewOrderService(orderRepository, orderProductRepository, productQuantityCalculatorService)
 
 	userController := controllers.NewUserController(userService)
 	authController := controllers.NewAuthController(authService, userService)
