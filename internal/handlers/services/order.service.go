@@ -32,11 +32,13 @@ func (service *OrderService) Create(orderBody *models.Order, orderProducts []*mo
 	if err != nil {
 		return nil, err
 	}
+
 	for _, op := range orderProducts {
 		op.OrderID = createdOrder.ID
 		if err := service.orderProductRepo.Create(op); err != nil {
 			return nil, err
 		}
+
 		if err := service.quantityCalculatorService.CalculateQuantity(op.ProductID, int(op.Quantity)); err != nil {
 			return nil, err
 		}
@@ -92,6 +94,7 @@ func (service *OrderService) GetById(id uint) (models.OrderWithProducts, error) 
 
 func (service *OrderService) Update(orderID uint, updatedOrder models.OrderWithProducts) (models.OrderWithProducts, error) {
 	if err := validation.ValidateStruct(updatedOrder); err != nil {
+
 		return models.OrderWithProducts{}, err
 	}
 
@@ -105,36 +108,44 @@ func (service *OrderService) Update(orderID uint, updatedOrder models.OrderWithP
 		return models.OrderWithProducts{}, err
 	}
 
-	for _, updatedProduct := range updatedOrder.OrderProducts {
-		var existingProduct *models.OrderProduct
-		for _, existing := range existingProducts {
+	if err := service.updateOrderProducts(orderID, existingProducts, updatedOrder.OrderProducts); err != nil {
+		return models.OrderWithProducts{}, err
+	}
 
-			if existing.ProductID == updatedProduct.ProductID {
-				existingProduct = existing
-				break
-			}
-		}
+	return updatedOrder, nil
+}
 
-		if existingProduct != nil {
-			_, err := service.orderProductRepo.Update(updatedProduct.ID, *updatedProduct)
+func (service *OrderService) updateOrderProducts(orderId uint, existingProducts, updatedProducts []*models.OrderProduct) error {
+	productMap := buildProductMap(existingProducts)
+
+	for _, updatedProduct := range updatedProducts {
+		prevQuantity, found := productMap[updatedProduct.ProductID]
+		if found {
+			_, err := service.orderProductRepo.Update(updatedProduct.OrderID, *updatedProduct)
 			if err != nil {
-				return models.OrderWithProducts{}, err
+				return err
 			}
 
-			diff := int(updatedProduct.Quantity) - int(existingProduct.Quantity)
+			diff := calculateQuantityDifference(updatedProduct.Quantity, prevQuantity)
 			if diff != 0 {
 				if err := service.quantityCalculatorService.CalculateQuantity(updatedProduct.ProductID, diff); err != nil {
-					return models.OrderWithProducts{}, err
+					return err
 				}
 			}
+			delete(productMap, updatedProduct.ProductID)
+
 		} else {
 			if err := service.orderProductRepo.Create(updatedProduct); err != nil {
-				return models.OrderWithProducts{}, err
+				return err
 			}
 		}
 	}
 
-	return updatedOrder, nil
+	if err := service.updateQuantityAndDeleteProducts(orderId, productMap); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (service *OrderService) Delete(orderId uint) error {
@@ -142,9 +153,33 @@ func (service *OrderService) Delete(orderId uint) error {
 		return err
 	}
 
-	if err := service.orderProductRepo.DeleteByOrderId(orderId); err != nil {
+	if err := service.orderProductRepo.DeleteAllByOrderId(orderId); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (service *OrderService) updateQuantityAndDeleteProducts(orderID uint, productMap map[uint]uint) error {
+	for productID, quantity := range productMap {
+		if err := service.quantityCalculatorService.CalculateQuantity(productID, int(quantity)); err != nil {
+			return err
+		}
+		if err := service.orderProductRepo.DeleteOneByProductId(orderID, productID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func buildProductMap(existingProducts []*models.OrderProduct) map[uint]uint {
+	productMap := make(map[uint]uint)
+	for _, existingProduct := range existingProducts {
+		productMap[existingProduct.ProductID] = existingProduct.Quantity
+	}
+	return productMap
+}
+
+func calculateQuantityDifference(newQuantity, oldQuantity uint) int {
+	return int(newQuantity) - int(oldQuantity)
 }

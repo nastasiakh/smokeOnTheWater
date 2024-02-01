@@ -27,7 +27,7 @@ func (c *CategoryController) GetAllCategories(ctx *gin.Context) {
 func (c *CategoryController) GetCategoryById(ctx *gin.Context) {
 	categoryId, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
 	if err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid category ID"})
+		ctx.JSON(404, gin.H{"error": "Page not found"})
 		return
 	}
 

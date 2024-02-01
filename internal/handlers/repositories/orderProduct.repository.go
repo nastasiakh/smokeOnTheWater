@@ -68,7 +68,7 @@ func (repo *OrderProductRepository) Update(orderID uint, body models.OrderProduc
 	return &body, nil
 }
 
-func (repo *OrderProductRepository) DeleteByOrderId(orderId uint) error {
+func (repo *OrderProductRepository) DeleteAllByOrderId(orderId uint) error {
 	existingProducts, err := repo.FindByOrderID(orderId)
 	if err != nil {
 		return err
@@ -78,6 +78,19 @@ func (repo *OrderProductRepository) DeleteByOrderId(orderId uint) error {
 		if err := repo.db.Delete(&product).Error; err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (repo *OrderProductRepository) DeleteOneByProductId(orderID uint, productID uint) error {
+	var product models.OrderProduct
+	if err := repo.db.Where("order_id = ? AND product_id = ?", orderID, productID).First(&product).Error; err != nil {
+		return err
+	}
+
+	if err := repo.db.Delete(&product, product.ID).Error; err != nil {
+		return err
 	}
 
 	return nil
