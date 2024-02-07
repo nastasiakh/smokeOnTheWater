@@ -12,6 +12,6 @@ type Order struct {
 	LastName     string    `json:"lastName" gorm:"column:lastName;not null" validate:"required"`
 	Phone        string    `json:"phone" gorm:"column:phone;not null" validate:"required"`
 	Email        string    `json:"email" gorm:"column:email;not null" validate:"required,email"`
-	Address      Address   `json:"address" gorm:"column:address;not null" validate:"required"`
+	Address      Address   `json:"address" gorm:"embedded;embeddedPrefix:address_" validate:"required"`
 	CustomerID   uint      `json:"customer" gorm:"column:customerId"`
 }
