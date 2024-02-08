@@ -5,7 +5,7 @@ type Address struct {
 	Region    string `json:"region"`
 	Location  string `json:"location"`
 	Street    string `json:"street"`
-	HouseNum  string `json:"house_num"`
+	HouseNum  string `json:"houseNum"`
 	Apartment uint   `json:"apartment"`
 	Zipcode   string `json:"zipcode"`
 }

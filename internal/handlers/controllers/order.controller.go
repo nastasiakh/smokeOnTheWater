@@ -62,6 +62,8 @@ func (c *OrderController) GetOrderById(ctx *gin.Context) {
 
 func (c *OrderController) UpdateOrder(ctx *gin.Context) {
 	var newOrder models.OrderWithProducts
+	newOrder.Order.DateModified = time.Now()
+
 	if err := ctx.ShouldBindJSON(&newOrder); err != nil {
 		ctx.JSON(400, gin.H{"error": "Invalid order data"})
 		return
@@ -71,7 +73,6 @@ func (c *OrderController) UpdateOrder(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"error": "Invalid order ID"})
 		return
 	}
-	newOrder.Order.DateModified = time.Now()
 	order, err := c.orderService.Update(uint(orderId), newOrder)
 
 	if err != nil {
