@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/jinzhu/gorm"
 	"smokeOnTheWater/internal/handlers/repositories"
 	"smokeOnTheWater/internal/handlers/validation"
 	"smokeOnTheWater/internal/models"
@@ -24,25 +25,32 @@ func NewOrderService(
 }
 
 func (service *OrderService) Create(orderBody *models.Order, orderProducts []*models.OrderProduct) (*models.Order, error) {
+	tx := service.orderRepo.Db.Begin()
+
 	if err := validation.ValidateStruct(*orderBody); err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
-	createdOrder, err := service.orderRepo.Create(orderBody)
+	createdOrder, err := service.orderRepo.Create(tx, orderBody)
 	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
 	for _, op := range orderProducts {
 		op.OrderID = createdOrder.ID
-		if err := service.orderProductRepo.Create(op); err != nil {
+		if err := service.orderProductRepo.Create(tx, op); err != nil {
+			tx.Rollback()
 			return nil, err
 		}
 
 		if err := service.quantityCalculatorService.CalculateQuantity(op.ProductID, int(op.Quantity)); err != nil {
+			tx.Rollback()
 			return nil, err
 		}
 	}
+	tx.Commit()
 	return createdOrder, err
 }
 
@@ -93,35 +101,41 @@ func (service *OrderService) GetById(id uint) (models.OrderWithProducts, error) 
 }
 
 func (service *OrderService) Update(orderID uint, updatedOrder models.OrderWithProducts) (models.OrderWithProducts, error) {
-	if err := validation.ValidateStruct(updatedOrder); err != nil {
+	tx := service.orderRepo.Db.Begin()
 
+	if err := validation.ValidateStruct(updatedOrder); err != nil {
+		tx.Rollback()
 		return models.OrderWithProducts{}, err
 	}
 
-	_, err := service.orderRepo.Update(orderID, updatedOrder.Order)
+	_, err := service.orderRepo.Update(tx, orderID, updatedOrder.Order)
 	if err != nil {
+		tx.Rollback()
 		return models.OrderWithProducts{}, err
 	}
 
 	existingProducts, err := service.orderProductRepo.FindByOrderID(orderID)
 	if err != nil {
+		tx.Rollback()
 		return models.OrderWithProducts{}, err
 	}
 
-	if err := service.updateOrderProducts(orderID, existingProducts, updatedOrder.OrderProducts); err != nil {
+	if err := service.updateOrderProducts(tx, orderID, existingProducts, updatedOrder.OrderProducts); err != nil {
+		tx.Rollback()
 		return models.OrderWithProducts{}, err
 	}
 
+	tx.Commit()
 	return updatedOrder, nil
 }
 
-func (service *OrderService) updateOrderProducts(orderId uint, existingProducts, updatedProducts []*models.OrderProduct) error {
+func (service *OrderService) updateOrderProducts(tx *gorm.DB, orderId uint, existingProducts, updatedProducts []*models.OrderProduct) error {
 	productMap := buildProductMap(existingProducts)
 
 	for _, updatedProduct := range updatedProducts {
 		prevQuantity, found := productMap[updatedProduct.ProductID]
 		if found {
-			_, err := service.orderProductRepo.Update(updatedProduct.OrderID, *updatedProduct)
+			_, err := service.orderProductRepo.Update(tx, updatedProduct.OrderID, *updatedProduct)
 			if err != nil {
 				return err
 			}
@@ -135,13 +149,13 @@ func (service *OrderService) updateOrderProducts(orderId uint, existingProducts,
 			delete(productMap, updatedProduct.ProductID)
 
 		} else {
-			if err := service.orderProductRepo.Create(updatedProduct); err != nil {
+			if err := service.orderProductRepo.Create(tx, updatedProduct); err != nil {
 				return err
 			}
 		}
 	}
 
-	if err := service.updateQuantityAndDeleteProducts(orderId, productMap); err != nil {
+	if err := service.updateQuantityAndDeleteProducts(tx, orderId, productMap); err != nil {
 		return err
 	}
 
@@ -149,23 +163,31 @@ func (service *OrderService) updateOrderProducts(orderId uint, existingProducts,
 }
 
 func (service *OrderService) Delete(orderId uint) error {
-	if err := service.orderRepo.DeleteById(orderId); err != nil {
+	tx := service.orderRepo.Db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	defer tx.Commit()
+
+	if err := service.orderRepo.DeleteById(tx, orderId); err != nil {
 		return err
 	}
 
-	if err := service.orderProductRepo.DeleteAllByOrderId(orderId); err != nil {
+	if err := service.orderProductRepo.DeleteAllByOrderId(tx, orderId); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (service *OrderService) updateQuantityAndDeleteProducts(orderID uint, productMap map[uint]uint) error {
+func (service *OrderService) updateQuantityAndDeleteProducts(tx *gorm.DB, orderID uint, productMap map[uint]uint) error {
 	for productID, quantity := range productMap {
 		if err := service.quantityCalculatorService.CalculateQuantity(productID, int(quantity)); err != nil {
 			return err
 		}
-		if err := service.orderProductRepo.DeleteOneByProductId(orderID, productID); err != nil {
+		if err := service.orderProductRepo.DeleteOneByProductId(tx, orderID, productID); err != nil {
 			return err
 		}
 	}

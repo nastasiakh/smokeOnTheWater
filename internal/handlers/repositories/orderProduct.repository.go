@@ -15,14 +15,15 @@ func NewOrderProductRepository(db *gorm.DB) *OrderProductRepository {
 	return &OrderProductRepository{db: db}
 }
 
-func (repo *OrderProductRepository) Create(body *models.OrderProduct) error {
+func (repo *OrderProductRepository) Create(tx *gorm.DB, body *models.OrderProduct) error {
 	if err := validation.ValidateStruct(*body); err != nil {
 		return err
 	}
-	if err := repo.db.Create(body).Error; err != nil {
+	if err := tx.Create(body).Error; err != nil {
 		return err
 	}
 	return nil
+
 }
 
 func (repo *OrderProductRepository) FindAll() ([]models.OrderProduct, error) {
@@ -38,7 +39,7 @@ func (repo *OrderProductRepository) FindByOrderID(orderId uint) ([]*models.Order
 	return orderProducts, nil
 }
 
-func (repo *OrderProductRepository) Update(orderID uint, body models.OrderProduct) (*models.OrderProduct, error) {
+func (repo *OrderProductRepository) Update(tx *gorm.DB, orderID uint, body models.OrderProduct) (*models.OrderProduct, error) {
 	if err := validation.ValidateStruct(&body); err != nil {
 		return nil, err
 	}
@@ -61,21 +62,21 @@ func (repo *OrderProductRepository) Update(orderID uint, body models.OrderProduc
 		return nil, fmt.Errorf("product with ID %d not found in order %d", body.ID, orderID)
 	}
 
-	if err := repo.db.Model(&existingProducts[index]).Updates(&body).Error; err != nil {
+	if err := tx.Model(&existingProducts[index]).Updates(&body).Error; err != nil {
 		return nil, err
 	}
 
 	return &body, nil
 }
 
-func (repo *OrderProductRepository) DeleteAllByOrderId(orderId uint) error {
+func (repo *OrderProductRepository) DeleteAllByOrderId(tx *gorm.DB, orderId uint) error {
 	existingProducts, err := repo.FindByOrderID(orderId)
 	if err != nil {
 		return err
 	}
 
 	for _, product := range existingProducts {
-		if err := repo.db.Delete(&product).Error; err != nil {
+		if err := tx.Delete(&product).Error; err != nil {
 			return err
 		}
 	}
@@ -83,13 +84,13 @@ func (repo *OrderProductRepository) DeleteAllByOrderId(orderId uint) error {
 	return nil
 }
 
-func (repo *OrderProductRepository) DeleteOneByProductId(orderID uint, productID uint) error {
+func (repo *OrderProductRepository) DeleteOneByProductId(tx *gorm.DB, orderID uint, productID uint) error {
 	var product models.OrderProduct
-	if err := repo.db.Where("order_id = ? AND product_id = ?", orderID, productID).First(&product).Error; err != nil {
+	if err := tx.Where("order_id = ? AND product_id = ?", orderID, productID).First(&product).Error; err != nil {
 		return err
 	}
 
-	if err := repo.db.Delete(&product, product.ID).Error; err != nil {
+	if err := tx.Delete(&product, product.ID).Error; err != nil {
 		return err
 	}
 
