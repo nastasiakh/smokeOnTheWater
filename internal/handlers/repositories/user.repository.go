@@ -29,7 +29,7 @@ func (repo *UserRepository) FindById(id uint) (models.User, error) {
 
 func (repo *UserRepository) FindByEmail(email string) (*models.User, error) {
 	var user models.User
-	if err := repo.db.Where("email = ?", email).First(&user).Error; err != nil {
+	if err := repo.db.Preload("Roles").Where("email = ?", email).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil

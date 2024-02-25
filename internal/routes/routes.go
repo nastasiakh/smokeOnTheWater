@@ -11,6 +11,8 @@ func AddRoutes(router *gin.Engine, container *di.Container) {
 	{
 		authGroup.POST("/login", authController.Login)
 		authGroup.POST("/sign-up", authController.SignUp)
+		authGroup.POST("/refresh", authController.RefreshToken)
+
 	}
 
 	userController := container.UserController
