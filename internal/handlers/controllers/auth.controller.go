@@ -115,7 +115,7 @@ func (c *AuthController) Login(ctx *gin.Context) {
 		ctx.JSON(401, gin.H{"error": "Invalid credentials"})
 		return
 	}
-	ctx.Set("userRole", existingUser.Roles)
+	ctx.Set("roles", existingUser.Roles)
 	token, _, err := generateTokens(existingUser)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to generate token"})

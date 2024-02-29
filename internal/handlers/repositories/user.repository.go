@@ -16,12 +16,12 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 
 func (repo *UserRepository) FindAll() ([]models.User, error) {
 	var users []models.User
-	return users, repo.db.Preload("Roles").Find(&users).Error
+	return users, repo.db.Preload("Roles").Preload("Roles.Permissions").Find(&users).Error
 }
 
 func (repo *UserRepository) FindById(id uint) (models.User, error) {
 	var user models.User
-	if err := repo.db.Preload("Roles").First(&user, id).Error; err != nil {
+	if err := repo.db.Preload("Roles").Preload("Roles.Permissions").First(&user, id).Error; err != nil {
 		return models.User{}, err
 	}
 	return user, nil
@@ -29,7 +29,7 @@ func (repo *UserRepository) FindById(id uint) (models.User, error) {
 
 func (repo *UserRepository) FindByEmail(email string) (*models.User, error) {
 	var user models.User
-	if err := repo.db.Preload("Roles").Where("email = ?", email).First(&user).Error; err != nil {
+	if err := repo.db.Preload("Roles").Preload("Roles.Permissions").Where("email = ?", email).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
